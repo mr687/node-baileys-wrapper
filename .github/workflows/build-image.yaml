@@ -9,65 +9,67 @@ on:
       - '*'
 
 jobs:
-  build-and-push-amd:
+  build-and-push:
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     environment: production
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
     steps:
       - uses: actions/checkout@v4
-      - name: Login Registry
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          context: .
-          file: ./Dockerfile
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:latest,${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:latest-amd, ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:${{ github.ref_name }}-amd
 
-  build-and-push-arm:
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    environment: production
-    runs-on: [ARM64]
-    steps:
-      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Login Registry
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Extract Platform Info
+        id: platform
+        run: |
+          platform=${{ matrix.platform }}
+          arch=${platform#*/}
+          short_arch=$(echo $arch | sed 's/amd64/amd/;s/arm64/arm/')
+          echo "arch=$short_arch" >> $GITHUB_OUTPUT
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           push: true
           context: .
           file: ./Dockerfile
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:latest-arm, ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:${{ github.ref_name }}-arm
+          platforms: ${{ matrix.platform }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:latest-${{ steps.platform.outputs.arch }},
+            ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:${{ github.ref_name }}-${{ steps.platform.outputs.arch }}
 
   merge-manifest:
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    needs: [build-and-push-amd, build-and-push-arm]
+    needs: build-and-push
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     steps:
       - name: Login Registry
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
       - name: Create Versioned Manifest (${{ github.ref_name }})
         run: |
           docker buildx imagetools create -t ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:${{ github.ref_name }} \
             ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:${{ github.ref_name }}-amd \
             ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:${{ github.ref_name }}-arm
+
       - name: Create Latest Manifest
         run: |
           docker buildx imagetools create -t ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:latest \
