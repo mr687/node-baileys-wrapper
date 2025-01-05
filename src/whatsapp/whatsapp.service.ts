@@ -4,11 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { WhatsappBaileys } from './whatsapp.baileys';
-import {
-  S_WHATSAPP_NET,
-  type WASocket,
-  Mimetype,
-} from '@whiskeysockets/baileys';
+import { S_WHATSAPP_NET, type WASocket } from '@whiskeysockets/baileys';
 import type { EventHandler } from './dto/event.dto';
 import {
   GetStateResponseDto,
