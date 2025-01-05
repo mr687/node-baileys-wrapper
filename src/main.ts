@@ -9,6 +9,7 @@ import helmet from '@fastify/helmet';
 import { join } from 'node:path';
 import { BodyValidationPipe } from './pipes/body-validation.pipe';
 import { registerSwaggerModule } from './config/swagger';
+import FastifyMultipart from '@fastify/multipart';
 
 async function bootstrap() {
   const logger = new Logger(bootstrap.name);
@@ -44,6 +45,8 @@ async function bootstrap() {
     templates: join(__dirname, '..', 'views'),
   });
 
+  app.register(FastifyMultipart);
+
   const configService = app.get(ConfigService);
 
   await registerSwaggerModule(app, configService);
@@ -54,4 +57,5 @@ async function bootstrap() {
   await app.listen(httpPort, httpHost);
   logger.log(`App is listening on ${await app.getUrl()}`);
 }
+
 bootstrap();

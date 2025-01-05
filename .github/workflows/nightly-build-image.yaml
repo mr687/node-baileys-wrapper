@@ -1,0 +1,69 @@
+name: Nightly Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  build-and-push:
+    environment: nightly
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Login Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --debug
+
+      - name: Extract Platform Info
+        id: platform
+        run: |
+          platform=${{ matrix.platform }}
+          arch=${platform#*/}
+          short_arch=$(echo $arch | sed 's/amd64/amd/;s/arm64/arm/')
+          echo "arch=$short_arch" >> $GITHUB_OUTPUT
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:nightly-${{ steps.platform.outputs.arch }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:buildcache-${{ steps.platform.outputs.arch }}
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:buildcache-${{ steps.platform.outputs.arch }},mode=max
+
+  merge-manifest:
+    runs-on: ubuntu-24.04
+    needs: build-and-push
+    steps:
+      - name: Login Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create Nightly Manifest
+        run: |
+          docker buildx imagetools create -t ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:nightly \
+            ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:nightly-amd \
+            ${{ secrets.DOCKERHUB_USERNAME }}/baileys-wrapper:nightly-arm

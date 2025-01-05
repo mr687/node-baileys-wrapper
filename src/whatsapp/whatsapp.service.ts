@@ -4,12 +4,17 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { WhatsappBaileys } from './whatsapp.baileys';
-import { S_WHATSAPP_NET, type WASocket } from '@whiskeysockets/baileys';
+import {
+  S_WHATSAPP_NET,
+  type WASocket,
+  Mimetype,
+} from '@whiskeysockets/baileys';
 import type { EventHandler } from './dto/event.dto';
 import {
   GetStateResponseDto,
   SendMessageResponseDto,
 } from './dto/response.dto';
+import { SendFileRequestDto } from './dto/request.dto';
 
 @Injectable()
 export class WhatsappService {
@@ -54,6 +59,26 @@ export class WhatsappService {
     }
     jid = this._toPersonalJID(jid);
     const res = await this.client.sendMessageWithTyping(jid, { text: text });
+    return {
+      messageId: res!.key.id!,
+      messageTimetamp: new Date().getTime().toString(),
+    };
+  }
+
+  async sendFileMessage(
+    data: SendFileRequestDto,
+  ): Promise<SendMessageResponseDto> {
+    if (!this.getSocket()) {
+      throw new BadRequestException('Your whatsapp is not connected');
+    }
+    const { file, phone, caption } = data;
+    const jid = this._toPersonalJID(phone);
+    const res = await this.client.sendMessageWithTyping(jid, {
+      document: file.buffer,
+      caption: caption ?? undefined,
+      mimetype: file.mimetype,
+      fileName: file.originalFilename,
+    });
     return {
       messageId: res!.key.id!,
       messageTimetamp: new Date().getTime().toString(),
