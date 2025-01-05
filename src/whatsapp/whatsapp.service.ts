@@ -65,7 +65,9 @@ export class WhatsappService {
     };
   }
 
-  async sendFileMessage(data: SendFileRequestDto) {
+  async sendFileMessage(
+    data: SendFileRequestDto,
+  ): Promise<SendMessageResponseDto> {
     if (!this.getSocket()) {
       throw new BadRequestException('Your whatsapp is not connected');
     }
@@ -77,7 +79,10 @@ export class WhatsappService {
       mimetype: file.mimetype,
       fileName: file.originalFilename,
     });
-    return res;
+    return {
+      messageId: res!.key.id!,
+      messageTimetamp: new Date().getTime().toString(),
+    };
   }
 
   async getUserAvatarUrl(jid: string): Promise<string | null> {
