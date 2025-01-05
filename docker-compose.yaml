@@ -1,0 +1,13 @@
+services:
+  baileys_wrapper:
+    container_name: baileys_wrapper
+    image: mr687/baileys_wrapper:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - ./baileys_auth_states:/app/baileys_auth_states

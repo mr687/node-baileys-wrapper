@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/public/main.css" rel="stylesheet" />
+    <script
+      src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+      integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+      crossorigin="anonymous"
+      async
+    ></script>
+    <script src="/public/main.js" async></script>
+  </head>
+  <body class="bg-[#FCF5EB]">
+    <div class="h-full w-full flex items-center justify-center">
+      <div id="content-loading">
+        <p>Initializing...</p>
+      </div>
+      <div
+        id="content"
+        class="hidden border p-16 rounded-3xl bg-white border-black"
+      >
+        <div id="authenticated" class="hidden flex-col gap-10">
+          <div class="flex items-center justify-center gap-4">
+            <div class="border border-black bg-gray-200 h-12 w-12 rounded-full">
+              <img id="user-avatar" class="w-full h-full rounded-full" />
+            </div>
+            <div>
+              <h3 id="user-name" class="font-medium text-lg">{user_name}</h3>
+              <p id="user-description">{user_description}</p>
+            </div>
+          </div>
+          <button
+            id="logout"
+            class="rounded-3xl bg-green-500 py-2 px-8 border border-black"
+          >
+            Logout
+          </button>
+        </div>
+        <div id="unauthenticated" class="gap-20 items-center hidden">
+          <div>
+            <h1 class="text-3xl font-normal mb-2">Log into Whatsapp</h1>
+            <p class="mb-6">
+              Scan your QR code to access all API capabilities.
+            </p>
+            <ol class="space-y-4">
+              <li class="flex items-center gap-2">
+                <span class="text-gray-700">1.</span>
+                <span>Open WhatsApp on your phone</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-gray-700">2.</span>
+                <span
+                  >Tap <span class="font-medium">Menu</span>
+                  <span class="rounded-full border px-2 py-0.5 text-sm"
+                    >︙</span
+                  >
+                  on Android, or <span class="font-medium">Settings</span>
+                  <span class="rounded-full border px-2 py-0.5 text-sm"
+                    >⚙</span
+                  >
+                  on iPhone</span
+                >
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-gray-700">3.</span>
+                <span
+                  >Tap <span class="font-medium">Linked devices</span> and then
+                  <span class="font-medium">Link a device</span></span
+                >
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-gray-700">4.</span>
+                <span>Point your phone at this screen to scan the QR code</span>
+              </li>
+            </ol>
+          </div>
+          <div class="flex-1">
+            <div id="qr" class="w-60 h-60 hidden relative">
+              <button
+                id="qr-reload"
+                class="absolute top-0 left-0 right-0 bottom-0 text-white bg-white/80 hidden"
+              >
+                <div
+                  class="bg-black/70 p-4 rounded-3xl flex flex-col items-center justify-center gap-4 absolute top-8 left-8 right-8 bottom-8"
+                >
+                  <div class="text-3xl">🔃</div>
+                  <div>Click to reload QR code</div>
+                </div>
+              </button>
+              <img id="qr-image" class="w-full h-full" />
+            </div>
+            <div
+              id="qr-loading"
+              class="hidden w-52 h-52 bg-gray-200 rounded-3xl"
+            >
+              <div class="w-full h-full flex items-center justify-center">
+                <div role="status" aria-label="loading">
+                  <svg
+                    class="w-14 h-14 stroke-slate-400 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g clip-path="url(#clip0_9023_61563)">
+                      <path
+                        d="M14.6437 2.05426C11.9803 1.2966 9.01686 1.64245 6.50315 3.25548C1.85499 6.23817 0.504864 12.4242 3.48756 17.0724C6.47025 21.7205 12.6563 23.0706 17.3044 20.088C20.4971 18.0393 22.1338 14.4793 21.8792 10.9444"
+                        stroke="stroke-current"
+                        stroke-width="2.4"
+                        stroke-linecap="round"
+                        class="my-path"
+                      ></path>
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_9023_61563">
+                        <rect width="24" height="24" fill="white"></rect>
+                      </clipPath>
+                    </defs>
+                  </svg>
+                  <span class="sr-only">Loading...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
