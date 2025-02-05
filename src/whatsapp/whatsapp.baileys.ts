@@ -162,7 +162,12 @@ export class WhatsappBaileys
           const isLoggedOut = statusCode === DisconnectReason.loggedOut;
           const isTimeout = statusCode === DisconnectReason.timedOut;
           const isRestartRequired =
-            statusCode === DisconnectReason.restartRequired || isTimeout;
+            statusCode === DisconnectReason.restartRequired ||
+            isTimeout ||
+            DisconnectReason.connectionClosed ||
+            DisconnectReason.connectionReplaced ||
+            DisconnectReason.connectionLost ||
+            DisconnectReason.multideviceMismatch;
 
           if (isRestartRequired) {
             this._restartRequired = true;
